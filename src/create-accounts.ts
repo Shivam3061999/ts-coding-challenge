@@ -1,5 +1,5 @@
 import { accounts } from "./config";
-import { AccountCreateTransaction, AccountId, Client, PrivateKey } from "@hashgraph/sdk";
+import { AccountCreateTransaction, AccountId, AccountInfoQuery, Client, PrivateKey } from "@hashgraph/sdk";
 
 const client = Client.forTestnet()
 
@@ -9,9 +9,9 @@ async function main() {
   const MY_PRIVATE_KEY = PrivateKey.fromStringED25519(account.privateKey);
   client.setOperator(MY_ACCOUNT_ID, MY_PRIVATE_KEY);
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 1; i++) {
     const newPrivateKey = PrivateKey.generate()
-    const receipt = await (await new AccountCreateTransaction().setInitialBalance(100).setKey(newPrivateKey)
+    const receipt = await (await new AccountCreateTransaction().setInitialBalance(10).setKey(newPrivateKey)
         .execute(client)).getReceipt(client)
     console.log(`{id: "${receipt.accountId}", privateKey: "${newPrivateKey}"},`)
   }
