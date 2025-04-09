@@ -303,6 +303,140 @@ When(/^I create a fixed supply token named (.+) \((.+)\) with (\d+) tokens$/, as
     await delay(9000);
 });
 
+// Add this specific step definition:
+Given('A first hedera account with more than {int} hbar and {int} HTT tokens', async function (minHbar: number, balanceTokens: number) {
+  console.log(`--- Setup: Account 1 with HBAR > ${minHbar} and ${balanceTokens} HTT ---`);
+  // 1. Ensure Account 1 exists and has HBAR (Redundant check if previous step ran, but safe)
+  const acc = getAccount(0);
+  this.account1Id = acc.id;
+  this.account1Key = acc.key;
+  this.account = this.account1Id;
+  this.privKey = this.account1Key;
+  client.setOperator(this.account1Id, this.account1Key);
+  const balance = await new AccountBalanceQuery().setAccountId(this.account1Id).execute(client);
+  console.log(`Account 1 HBAR balance: ${balance.hbars.toString()}`);
+  assert.ok(balance.hbars.toBigNumber().isGreaterThan(minHbar), `Account 1 needs more than ${minHbar} hbar.`);
+
+  // 2. Ensure Token exists
+  assert.ok(this.tokenId, "Token ID must be set in context before setting balance for Account 1");
+  assert.ok(this.tokenDecimals !== undefined, "Token decimals must be set in context");
+
+  // 3. Set/Verify token balance
+  console.log(`Setting initial token balance for Account 1 to ${balanceTokens} HTT`);
+  await setTokenBalance(this.account1Id, this.account1Key, this.tokenId, balanceTokens, this.tokenDecimals, client);
+});
+
+// Add this specific step definition:
+Given('A second Hedera account with {int} hbar and {int} HTT tokens', async function (minHbar: number, balanceTokens: number) {
+  console.log(`--- Setup: Account 2 with HBAR >= ${minHbar} and ${balanceTokens} HTT ---`);
+  // 1. Ensure Account 2 exists (Redundant check if previous step ran, but safe)
+  const acc = getAccount(1);
+  this.account2Id = acc.id;
+  this.account2Key = acc.key;
+  assert.ok(this.account1Id && this.account1Key, "Account 1 (Payer) context must be set");
+  client.setOperator(this.account1Id, this.account1Key); // Acc 1 pays for checks/setup
+
+  // 2. Check HBAR (optional)
+  if (minHbar > 0) {
+       const balance = await new AccountBalanceQuery().setAccountId(this.account2Id).execute(client);
+       console.log(`Account 2 HBAR balance: ${balance.hbars.toString()}`);
+        assert.ok(balance.hbars.toBigNumber().isGreaterThanOrEqualTo(minHbar), `Account 2 needs >= ${minHbar} hbar.`);
+  }
+
+  // 3. Ensure Token exists
+  assert.ok(this.tokenId, "Token ID must be set before setting balance for Account 2");
+  assert.ok(this.tokenDecimals !== undefined, "Token decimals must be set");
+
+  // 4. Set token balance (includes association)
+  console.log(`Setting initial token balance for Account 2 to ${balanceTokens} HTT`);
+  await setTokenBalance(this.account2Id, this.account2Key, this.tokenId, balanceTokens, this.tokenDecimals, client);
+});
+
+// Add this specific step definition:
+Given('A third Hedera account with {int} hbar and {int} HTT tokens', async function (minHbar: number, balanceTokens: number) {
+  console.log(`--- Setup: Account 3 with HBAR >= ${minHbar} and ${balanceTokens} HTT ---`);
+  // 1. Ensure Account 3 exists
+  const acc = getAccount(2);
+  this.account3Id = acc.id;
+  this.account3Key = acc.key;
+  assert.ok(this.account1Id && this.account1Key, "Account 1 (Payer) context must be set");
+  client.setOperator(this.account1Id, this.account1Key); // Acc 1 pays
+
+  // 2. Check HBAR (optional)
+  if (minHbar > 0) {
+      const balance = await new AccountBalanceQuery().setAccountId(this.account3Id).execute(client);
+      console.log(`Account 3 HBAR balance: ${balance.hbars.toString()}`);
+      assert.ok(balance.hbars.toBigNumber().isGreaterThanOrEqualTo(minHbar), `Account 3 needs >= ${minHbar} hbar.`);
+  }
+
+  // 3. Ensure Token exists
+  assert.ok(this.tokenId, "Token ID must be set before setting balance for Account 3");
+  assert.ok(this.tokenDecimals !== undefined, "Token decimals must be set");
+
+  // 4. Set token balance (includes association)
+  console.log(`Setting initial token balance for Account 3 to ${balanceTokens} HTT`);
+  await setTokenBalance(this.account3Id, this.account3Key, this.tokenId, balanceTokens, this.tokenDecimals, client);
+});
+
+// Add this specific step definition:
+Given('A fourth Hedera account with {int} hbar and {int} HTT tokens', async function (minHbar: number, balanceTokens: number) {
+  console.log(`--- Setup: Account 4 with HBAR >= ${minHbar} and ${balanceTokens} HTT ---`);
+  // 1. Ensure Account 4 exists
+  const acc = getAccount(3);
+  this.account4Id = acc.id;
+  this.account4Key = acc.key;
+  assert.ok(this.account1Id && this.account1Key, "Account 1 (Payer) context must be set");
+  client.setOperator(this.account1Id, this.account1Key); // Acc 1 pays
+
+  // 2. Check HBAR (optional)
+  if (minHbar > 0) {
+      const balance = await new AccountBalanceQuery().setAccountId(this.account4Id).execute(client);
+      console.log(`Account 4 HBAR balance: ${balance.hbars.toString()}`);
+      assert.ok(balance.hbars.toBigNumber().isGreaterThanOrEqualTo(minHbar), `Account 4 needs >= ${minHbar} hbar.`);
+  }
+
+  // 3. Ensure Token exists
+  assert.ok(this.tokenId, "Token ID must be set before setting balance for Account 4");
+  assert.ok(this.tokenDecimals !== undefined, "Token decimals must be set");
+
+  // 4. Set token balance (includes association)
+  console.log(`Setting initial token balance for Account 4 to ${balanceTokens} HTT`);
+  await setTokenBalance(this.account4Id, this.account4Key, this.tokenId, balanceTokens, this.tokenDecimals, client);
+});
+
+
+// Add this specific step definition (ensure regex matches feature file!)
+// NOTE: The original error showed 3 int params, but the text implies 4 amounts.
+// This implementation assumes 4 amounts based on the text description. Adjust if needed.
+When('A transaction is created to transfer {int} HTT tokens out of the first account, {int} HTT tokens out of the second account, {int} HTT tokens into the third account, and {int} HTT tokens into the fourth account',
+async function (out1Tokens: number, out2Tokens: number, in3Tokens: number, in4Tokens: number) {
+  console.log("--- Creating Multi-Party Transaction ---");
+  assert.ok(this.account1Id && this.account1Key, "Acc 1 missing");
+  assert.ok(this.account2Id && this.account2Key, "Acc 2 missing");
+  assert.ok(this.account3Id, "Acc 3 missing");
+  assert.ok(this.account4Id, "Acc 4 missing");
+  assert.ok(this.tokenId, "Token ID missing");
+  assert.ok(this.tokenDecimals !== undefined, "Token decimals missing");
+
+  const out1Units = adjustForDecimals(out1Tokens, this.tokenDecimals);
+  const out2Units = adjustForDecimals(out2Tokens, this.tokenDecimals);
+  const in3Units = adjustForDecimals(in3Tokens, this.tokenDecimals);
+  const in4Units = adjustForDecimals(in4Tokens, this.tokenDecimals);
+
+  assert.strictEqual((out1Units + out2Units), (in3Units + in4Units), "Multi-transfer amounts unbalanced");
+
+  console.log(`Creating multi-transfer: ${out1Tokens} from Acc1, ${out2Tokens} from Acc2, ${in3Tokens} to Acc3, ${in4Tokens} to Acc4`);
+  const transferTx = new TransferTransaction()
+      .addTokenTransfer(this.tokenId, this.account1Id, -Number(out1Units)) // Convert to number
+      .addTokenTransfer(this.tokenId, this.account2Id, -Number(out2Units)) // Convert to number
+      .addTokenTransfer(this.tokenId, this.account3Id, Number(in3Units))   // Convert to number
+      .addTokenTransfer(this.tokenId, this.account4Id, Number(in4Units));  // Convert to number
+
+  client.setOperator(this.account1Id, this.account1Key); // Freeze with payer (Acc 1)
+  await transferTx.freezeWith(client);
+  console.log("Multi-party transaction created and frozen.");
+  this.createdTransaction = transferTx;
+});
 // Step used in transfer scenarios to create the specific token needed
 Given(/^A token named (.+) \((.+)\) with (\d+) tokens$/, async function (tokenName: string, tokenSymbol: string, initialTokens: number) {
     // Creates a FIXED supply token with Account 1 as treasury for transfer tests
@@ -347,21 +481,55 @@ Given(/^A token named (.+) \((.+)\) with (\d+) tokens$/, async function (tokenNa
 // --- Steps to SET initial balances ---
 
 // Use these steps AFTER the token has been created and accounts defined/associated
+// Replace the existing definition for this step
 Given(/^The first account holds (\d+) HTT tokens$/, async function (balanceTokens: number) {
   assert.ok(this.account1Id && this.account1Key, "Account 1 context must be set");
   assert.ok(this.tokenId, "Token ID must be set");
   assert.ok(this.tokenDecimals !== undefined, "Token decimals must be set");
   client.setOperator(this.account1Id, this.account1Key); // Treasury client
 
-  console.log(`Setting initial token balance for Account 1 (Treasury) to ${balanceTokens} HTT`);
   const expectedUnits = adjustForDecimals(balanceTokens, this.tokenDecimals);
   const actualUnits = await getTokenBalance(this.account1Id, this.tokenId, client);
 
-  // Debugging output
-  console.log(`Expected Units: ${expectedUnits}, Actual Units: ${actualUnits}, Token Decimals: ${this.tokenDecimals}`);
+  console.log(`SETUP CHECK for Account 1: Expected ${balanceTokens} HTT (${expectedUnits} units), Actual: ${actualUnits} units`);
 
-  assert.strictEqual(actualUnits, expectedUnits, `SETUP FAIL: Account 1 (Treasury) expected ${expectedUnits} units, but holds ${actualUnits}. Check token creation.`);
-  console.log(`Verified Account 1 holds ${balanceTokens} tokens.`);
+  if (actualUnits === expectedUnits) {
+      console.log(`Account 1 already holds the desired ${balanceTokens} tokens.`);
+      return; // Nothing to do
+  }
+
+  // If we expect FEWER tokens than the treasury currently holds (common setup issue)
+  if (expectedUnits < actualUnits) {
+      const difference = actualUnits - expectedUnits;
+      console.warn(`Account 1 (Treasury) holds ${actualUnits} units, but test expects ${expectedUnits}. Transferring ${difference} units away...`);
+
+      // Need a temporary sink account (use Account 3 or 4 if available, otherwise fail)
+      // Let's use Account 3 for simplicity here. Ensure it exists.
+      const sinkAccount = getAccount(2); // Using Account 3 as sink
+      assert.ok(sinkAccount, "Need Account 3 defined in config to transfer excess treasury funds");
+      await associateToken(sinkAccount.id, sinkAccount.key, this.tokenId, client); // Ensure sink is associated
+      const transferTx = new TransferTransaction()
+          .addTokenTransfer(this.tokenId, this.account1Id, Number(-difference)) // Send from treasury
+          .addTokenTransfer(this.tokenId, sinkAccount.id, Number(difference));    // Send to sink
+
+      await transferTx.freezeWith(client);
+      // No extra signature needed as treasury (operator) is sending
+      const txResponse = await transferTx.execute(client);
+      const receipt = await txResponse.getReceipt(client);
+      assert.strictEqual(receipt.status, Status.Success, `Failed to transfer excess tokens from treasury during setup: ${receipt.status.toString()}`);
+      console.log(`Transferred ${difference} excess units from Account 1 to ${sinkAccount.id}.`);
+      await delay(5000);
+
+      // Re-verify balance after transfer
+      const finalUnits = await getTokenBalance(this.account1Id, this.tokenId, client);
+       assert.strictEqual(finalUnits, expectedUnits, `SETUP FAIL: Account 1 balance is ${finalUnits} units after attempting to adjust to ${expectedUnits} units.`);
+
+  } else {
+      // If we expect MORE tokens than treasury holds (less common for fixed tokens, maybe needs minting?)
+      // For now, consider this a setup failure, as setTokenBalance handles sending *to* other accounts.
+       assert.fail(`SETUP FAIL: Account 1 (Treasury) expected ${expectedUnits} units, but holds only ${actualUnits}. Cannot adjust upwards in this step.`);
+  }
+  console.log(`Account 1 setup to hold ${balanceTokens} tokens.`);
 });
 
 Given(/^The second account holds (\d+) HTT tokens$/, async function (balanceTokens: number) {
@@ -415,6 +583,22 @@ Given(/^The third account holds (\d+) HTT tokens$/, async function (balanceToken
 //   assert.strictEqual(actualUnits, expectedUnits, `SETUP FAIL: Account 1 (Treasury) expected ${expectedUnits} units, but holds ${actualUnits}. Check token creation.`);
 //   console.log(`Verified Account 1 holds ${balanceTokens} tokens.`);
 // });
+
+// Add this step definition if it's missing or incorrect
+Given('A first hedera account with more than {int} hbar', async function (minHbar: number) {
+  console.log("--- Setup: Account 1 with HBAR (Transfer Scenarios) ---");
+  const acc = getAccount(0);
+  this.account1Id = acc.id;
+  this.account1Key = acc.key;
+  this.account = this.account1Id; // Generic context needed by other steps
+  this.privKey = this.account1Key; // Generic context
+
+  client.setOperator(this.account1Id, this.account1Key);
+  console.log(`Operator set to Account 1: ${this.account1Id.toString()}`);
+  const balance = await new AccountBalanceQuery().setAccountId(this.account1Id).execute(client);
+  console.log(`Account 1 ${this.account1Id.toString()} HBAR balance: ${balance.hbars.toString()}`);
+  assert.ok(balance.hbars.toBigNumber().isGreaterThan(minHbar), `Account 1 ${this.account1Id.toString()} needs more than ${minHbar} hbar, but has ${balance.hbars.toString()}`);
+});
 
 Given(/^The fourth account holds (\d+) HTT tokens$/, async function (balanceTokens: number) {
     assert.ok(this.account4Id && this.account4Key, "Account 4 context must be set");
@@ -749,22 +933,22 @@ Then(/^The first account has paid for the transaction fee$/, async function () {
     this.balanceBefore = undefined; // Clear context
 });
 
-Given('A first hedera account with more than {int} hbar', async function (minHbar: number) {
-  console.log("--- Setting up Account 1 (Given A first...) ---");
-  const acc = getAccount(0);
-  this.account1Id = acc.id;
-  this.account1Key = acc.key;
-  // Also set generic context if needed elsewhere
-  this.account = this.account1Id;
-  this.privKey = this.account1Key;
+// Given('A first hedera account with more than {int} hbar', async function (minHbar: number) {
+//   console.log("--- Setting up Account 1 (Given A first...) ---");
+//   const acc = getAccount(0);
+//   this.account1Id = acc.id;
+//   this.account1Key = acc.key;
+//   // Also set generic context if needed elsewhere
+//   this.account = this.account1Id;
+//   this.privKey = this.account1Key;
 
-  client.setOperator(this.account1Id, this.account1Key);
-  console.log(`Operator set to Account 1: ${this.account1Id.toString()}`);
+//   client.setOperator(this.account1Id, this.account1Key);
+//   console.log(`Operator set to Account 1: ${this.account1Id.toString()}`);
 
-  const balance = await new AccountBalanceQuery().setAccountId(this.account1Id).execute(client);
-  console.log(`Account 1 ${this.account1Id.toString()} HBAR balance: ${balance.hbars.toString()}`);
-  assert.ok(balance.hbars.toBigNumber().isGreaterThan(minHbar), `Account 1 ${this.account1Id.toString()} needs more than ${minHbar} hbar, but has ${balance.hbars.toString()}`);
-});
+//   const balance = await new AccountBalanceQuery().setAccountId(this.account1Id).execute(client);
+//   console.log(`Account 1 ${this.account1Id.toString()} HBAR balance: ${balance.hbars.toString()}`);
+//   assert.ok(balance.hbars.toBigNumber().isGreaterThan(minHbar), `Account 1 ${this.account1Id.toString()} needs more than ${minHbar} hbar, but has ${balance.hbars.toString()}`);
+// });
 
 Given('A second Hedera account with {int} hbar and {int} HTT tokens', async function (minHbar: number, balanceTokens: number) {
   console.log("--- Setting up Account 2 with Tokens ---");
